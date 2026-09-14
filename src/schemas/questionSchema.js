@@ -1,11 +1,9 @@
 import { z } from "zod";
+import { positiveIdSchema, numericInputSchema } from "./idSchema.js";
 
 /** Schema reutilizável para IDs de parâmetros de questões. */
 export const idParamSchema = z.object({
-  id: z.coerce
-    .number()
-    .int("ID deve ser inteiro")
-    .positive("ID deve ser positivo"),
+  id: positiveIdSchema,
 });
 
 const questionFields = {
@@ -14,11 +12,13 @@ const questionFields = {
     .trim()
     .min(3, "Enunciado deve ter pelo menos 3 caracteres")
     .max(500, "Enunciado deve ter no máximo 500 caracteres"),
-  dificuldade: z.coerce
-    .number()
-    .int("Dificuldade deve ser inteira")
-    .min(1, "Dificuldade deve estar entre 1 e 3")
-    .max(3, "Dificuldade deve estar entre 1 e 3"),
+  dificuldade: numericInputSchema.pipe(
+    z.coerce
+      .number()
+      .int("Dificuldade deve ser inteira")
+      .min(1, "Dificuldade deve estar entre 1 e 3")
+      .max(3, "Dificuldade deve estar entre 1 e 3"),
+  ),
   respostaCorreta: z.union([
     z
       .string()
@@ -27,14 +27,8 @@ const questionFields = {
       .max(500, "Resposta correta deve ter no máximo 500 caracteres"),
     z.null(),
   ]),
-  subjectId: z.coerce
-    .number()
-    .int("subjectId deve ser inteiro")
-    .positive("subjectId deve ser positivo"),
-  authorId: z.coerce
-    .number()
-    .int("authorId deve ser inteiro")
-    .positive("authorId deve ser positivo"),
+  subjectId: positiveIdSchema,
+  authorId: positiveIdSchema,
   ativa: z.boolean(),
 };
 

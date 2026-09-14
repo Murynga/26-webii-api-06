@@ -1,11 +1,9 @@
 import { z } from "zod";
+import { positiveIdSchema } from "./idSchema.js";
 
 /** Schema reutilizável para IDs de parâmetros de matérias. */
 export const idParamSchema = z.object({
-  id: z.coerce
-    .number()
-    .int("ID deve ser inteiro")
-    .positive("ID deve ser positivo"),
+  id: positiveIdSchema,
 });
 
 /** Schema para POST /subjects. */
@@ -16,10 +14,7 @@ export const createSubjectSchema = z
       .trim()
       .min(3, "Nome deve ter pelo menos 3 caracteres")
       .max(100, "Nome deve ter no máximo 100 caracteres"),
-    professorId: z.coerce
-      .number()
-      .int("professorId deve ser inteiro")
-      .positive("professorId deve ser positivo"),
+    professorId: positiveIdSchema,
     ativa: z.boolean().optional(),
   })
   .strict();
@@ -33,11 +28,7 @@ export const updateSubjectSchema = z
       .min(3, "Nome deve ter pelo menos 3 caracteres")
       .max(100, "Nome deve ter no máximo 100 caracteres")
       .optional(),
-    professorId: z.coerce
-      .number()
-      .int("professorId deve ser inteiro")
-      .positive("professorId deve ser positivo")
-      .optional(),
+    professorId: positiveIdSchema.optional(),
     ativa: z.boolean().optional(),
   })
   .strict()
