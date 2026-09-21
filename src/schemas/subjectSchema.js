@@ -9,13 +9,13 @@ export const createSubjectSchema = z
       .trim()
       .min(3, "Nome deve ter pelo menos 3 caracteres")
       .max(100, "Nome deve ter no máximo 100 caracteres"),
-    professorId: z.int().numericParamSchema().idParamSchema(),
+    professorId: positiveIdSchema,
     ativa: z.boolean().default(true),
   })
   .strict();
 
 /** Schema para PATCH /subjects/:id. */
-export const updateUserSchema = z
+export const updateSubjectSchema = z
   .object({
     nome: z
       .string()
@@ -24,6 +24,7 @@ export const updateUserSchema = z
       .max(100, "Nome deve ter no máximo 100 caracteres")
       .optional(),
     ativa: z.boolean().optional(),
+    professorId: positiveIdSchema.optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
@@ -33,10 +34,10 @@ export const updateUserSchema = z
 
 /** Schema para parâmetros :id numéricos adequados. */
 export const numericParamSchema = z.object({
-  professorId: numericInputSchema,
+  id: numericInputSchema,
 });
 
 /** Schema para parâmetros :id positivos. */
 export const idParamSchema = z.object({
-  professorId: positiveIdSchema,
+  id: positiveIdSchema,
 });
