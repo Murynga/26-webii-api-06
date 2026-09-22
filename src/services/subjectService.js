@@ -1,4 +1,5 @@
 import prisma from "../config/database.js";
+import { ConflictError, NotFoundError } from "../errors/AppError.js";
 
 const publicUserSelect = {
   id: true,
@@ -17,119 +18,125 @@ const publicSubjectSelect = {
   professor: { select: publicUserSelect },
 };
 
-export const getAllSubjects = async () => {
+/**
+ * Busca matérias públicas ordenadas da mais recente para a mais antiga.
+ * @returns {Promise<object[]>} Matérias públicas.
+ */
+export function getAllSubjects() {
   return prisma.subject.findMany({
     select: publicSubjectSelect,
     orderBy: { createdAt: "desc" },
   });
-};
+}
 
-export const getSubjectById = async (subjectId) => {
-  return prisma.subject.findUnique({
+/**
+ * Busca uma matéria existente.
+ * @param {number} subjectId - ID já validado da matéria.
+ * @returns {Promise<object>} Matéria encontrada.
+ * @throws {NotFoundError} Quando a matéria não existe.
+ */
+export async function getSubjectById(subjectId) {
+  const subject = await prisma.subject.findUnique({
     where: { id: subjectId },
     select: publicSubjectSelect,
   });
-};
 
-export const createSubject = async (subjectData) => {
+  if (!subject) {
+    throw new NotFoundError(`Matéria com ID ${subjectId} não encontrada`);
+  }
+
+  return subject;
+}
+
+/**
+ * Cria uma matéria para um professor existente.
+ * @param {{nome: string, professorId: number, ativa?: boolean}} data - Dados parseados pelo Zod.
+ * @returns {Promise<object>} Matéria criada.
+ * @throws {NotFoundError} Quando o professor não existe.
+ */
+export async function createSubject(data) {
   const professor = await prisma.user.findUnique({
-    where: { id: subjectData.professorId },
+    where: { id: data.professorId },
     select: { id: true },
   });
 
   if (!professor) {
-    return { ok: false, reason: "PROFESSOR_NOT_FOUND" };
+    throw new NotFoundError(
+      `Professor com ID ${data.professorId} não encontrado`,
+    );
   }
 
-  const subject = await prisma.subject.create({
-    data: {
-      nome: subjectData.nome.trim(),
-      professorId: subjectData.professorId,
-      ativa: subjectData.ativa ?? true,
-    },
+  return prisma.subject.create({
+    data: { ...data, ativa: data.ativa ?? true },
     select: publicSubjectSelect,
   });
+}
 
-  return { ok: true, data: subject };
-};
+/**
+ * Atualiza uma matéria e, quando necessário, confere o novo professor.
+ * @param {number} subjectId - ID da matéria.
+ * @param {{nome?: string, professorId?: number, ativa?: boolean}} data - Atualização parcial validada.
+ * @returns {Promise<object>} Matéria atualizada.
+ * @throws {NotFoundError} Quando matéria ou professor não existem.
+ */
+export async function updateSubject(subjectId, data) {
+  await getSubjectById(subjectId);
 
-export const updateSubject = async (subjectId, subjectData) => {
-  const subjectExists = await prisma.subject.findUnique({
-    where: { id: subjectId },
-    select: { id: true },
-  });
-
-  if (!subjectExists) {
-    return { ok: false, reason: "NOT_FOUND" };
-  }
-
-  if (Object.hasOwn(subjectData, "professorId")) {
+  if (data.professorId !== undefined) {
     const professor = await prisma.user.findUnique({
-      where: { id: subjectData.professorId },
+      where: { id: data.professorId },
       select: { id: true },
     });
 
     if (!professor) {
-      return { ok: false, reason: "PROFESSOR_NOT_FOUND" };
+      throw new NotFoundError(
+        `Professor com ID ${data.professorId} não encontrado`,
+      );
     }
   }
 
-  const data = {};
-
-  if (Object.hasOwn(subjectData, "nome")) {
-    data.nome = subjectData.nome.trim();
-  }
-
-  if (Object.hasOwn(subjectData, "ativa")) {
-    data.ativa = subjectData.ativa;
-  }
-
-  if (Object.hasOwn(subjectData, "professorId")) {
-    data.professorId = subjectData.professorId;
-  }
-
-  const subject = await prisma.subject.update({
+  return prisma.subject.update({
     where: { id: subjectId },
     data,
     select: publicSubjectSelect,
   });
+}
 
-  return { ok: true, data: subject };
-};
-
-export const deleteSubject = async (subjectId) => {
-  const subjectExists = await prisma.subject.findUnique({
+/**
+ * Remove uma matéria sem questões vinculadas.
+ * @param {number} subjectId - ID da matéria.
+ * @returns {Promise<object>} Matéria removida.
+ * @throws {NotFoundError} Quando a matéria não existe.
+ * @throws {ConflictError} Quando há questões vinculadas.
+ */
+export async function deleteSubject(subjectId) {
+  const subject = await prisma.subject.findUnique({
     where: { id: subjectId },
-    select: {
-      id: true,
-      _count: { select: { questions: true } },
-    },
+    select: { id: true, _count: { select: { questions: true } } },
   });
 
-  if (!subjectExists) {
-    return { ok: false, reason: "NOT_FOUND" };
+  if (!subject) {
+    throw new NotFoundError(`Matéria com ID ${subjectId} não encontrada`);
   }
 
-  if (subjectExists._count.questions > 0) {
-    return { ok: false, reason: "SUBJECT_IN_USE" };
+  if (subject._count.questions > 0) {
+    throw new ConflictError("Matéria possui questões vinculadas");
   }
 
   try {
-    const subject = await prisma.subject.delete({
+    return await prisma.subject.delete({
       where: { id: subjectId },
       select: publicSubjectSelect,
     });
-
-    return { ok: true, data: subject };
   } catch (error) {
-    if (error.code === "P2003" || error.code === "P2014") {
-      return { ok: false, reason: "SUBJECT_IN_USE" };
+    if (error?.code === "P2003" || error?.code === "P2014") {
+      throw new ConflictError("Matéria possui questões vinculadas");
     }
 
-    if (error.code === "P2025") {
-      return { ok: false, reason: "NOT_FOUND" };
+    if (error?.code === "P2025") {
+      throw new NotFoundError(`Matéria com ID ${subjectId} não encontrada`);
     }
 
     throw error;
   }
-};
+}
