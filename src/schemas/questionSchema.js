@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { positiveIdSchema, numericInputSchema } from "./idSchema.js";
 
+const difficultySchema = numericInputSchema.pipe(
+  z.coerce
+    .number()
+    .int("Dificuldade deve ser inteira")
+    .min(1, "Dificuldade deve ser apenas 1, 2 ou 3")
+    .max(3, "Dificuldade deve ser apenas 1, 2 ou 3"),
+);
 
 /** Schema para POST /questions. */
 export const createQuestionSchema = z
@@ -10,19 +17,16 @@ export const createQuestionSchema = z
       .trim()
       .min(3, "Enunciado deve ter pelo menos 3 caracteres")
       .max(500, "Enunciado deve ter no máximo 500 caracteres"),
-    dificuldade: z.int()
-      .numericParamSchema()
-      .min(1, "Dificuldade deve ser apenas 1, 2 ou 3")
-      .max(3, "Dificuldade deve ser apenas 1, 2 ou 3"),
+    dificuldade: difficultySchema,
     respostaCorreta: z
       .string()
       .trim()
-      .min(3, "Resposta deve ter pelo menos 3 caracteres")
+      .min(1, "Resposta deve ter pelo menos 1 caractere")
       .max(500, "Resposta deve ter no máximo 500 caracteres")
-      .default(null)
+      .nullable()
       .optional(),
-    authorId: z.int().numericParamSchema().idParamSchema(),
-    subjectId: z.int().numericParamSchema().idParamSchema(),
+    authorId: positiveIdSchema,
+    subjectId: positiveIdSchema,
     ativa: z.boolean().default(true)
   })
   .strict();
@@ -36,33 +40,31 @@ export const updateQuestionSchema = z
       .min(3, "Enunciado deve ter pelo menos 3 caracteres")
       .max(500, "Enunciado deve ter no máximo 500 caracteres")
       .optional(),
-    dificuldade: z.int()
-      .numericParamSchema()
-      .min(1, "Dificuldade deve ser apenas 1, 2 ou 3")
-      .max(3, "Dificuldade deve ser apenas 1, 2 ou 3")
+    dificuldade: difficultySchema
       .optional(),
     respostaCorreta: z
       .string()
       .trim()
-      .min(3, "Resposta deve ter pelo menos 3 caracteres")
+      .min(1, "Resposta deve ter pelo menos 1 caractere")
       .max(500, "Resposta deve ter no máximo 500 caracteres")
-      .default(null)
+      .nullable()
       .optional(),
+    authorId: positiveIdSchema.optional(),
+    subjectId: positiveIdSchema.optional(),
     ativa: z.boolean().optional()
   })
-  .strict();
-
-
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Envie pelo menos um campo para atualização",
+  });
 
 
 /** Schema para parâmetros :id numéricos adequados. */
 export const numericParamSchema = z.object({
-  authorId: numericInputSchema,
-  subjectId: numericInputSchema,
+  id: numericInputSchema
 });
 
 /** Schema para parâmetros :id positivos. */
 export const idParamSchema = z.object({
-  authorId: positiveIdSchema,
-  subjectId: positiveIdSchema,
+  id: positiveIdSchema
 });
