@@ -5,3 +5,9 @@ aulas/
 .agents/
 .codex/
 package-lock.json
+bruno
+vitest.config.js
+.eslintrc.json
+eslint.config.mjs
+README.md
+prisma.config.ts

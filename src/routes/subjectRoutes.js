@@ -13,19 +13,24 @@ const router = express.Router();
 
 router.post("/", validate(createSubjectSchema), subjectController.create);
 router.get("/", subjectController.getAll);
-router.get("/:id", 
-  validate(idParamSchema, "params"), 
-  validate(numericParamSchema, "params"), 
-  subjectController.getById);
+router.get(
+  "/:id",
+  validate(idParamSchema, "params"),
+  validate(numericParamSchema, "params"),
+  subjectController.getById,
+);
 router.patch(
-  "/:id", 
+  "/:id",
   validate(idParamSchema, "params"),
   validate(numericParamSchema, "params"),
   validate(updateSubjectSchema),
-  subjectController.update);
-router.delete("/:id", 
+  subjectController.update,
+);
+router.delete(
+  "/:id",
   validate(idParamSchema, "params"),
   validate(numericParamSchema, "params"),
-  subjectController.remove);
+  subjectController.remove,
+);
 
 export default router;

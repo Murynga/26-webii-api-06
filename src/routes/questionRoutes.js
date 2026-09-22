@@ -15,17 +15,21 @@ router.get("/", questionController.getAll);
 router.get(
   "/:id",
   validate(idParamSchema, "params"),
-  validate(numericParamSchema, "params"), 
-  questionController.getById);
-router.patch("/:id", 
+  validate(numericParamSchema, "params"),
+  questionController.getById,
+);
+router.patch(
+  "/:id",
   validate(idParamSchema, "params"),
   validate(numericParamSchema, "params"),
   validate(updateQuestionSchema),
-  questionController.update);
+  questionController.update,
+);
 router.delete(
   "/:id",
   validate(idParamSchema, "params"),
   validate(numericParamSchema, "params"),
-  questionController.remove);
+  questionController.remove,
+);
 
 export default router;

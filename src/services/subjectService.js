@@ -56,7 +56,6 @@ export async function createSubject(data) {
     },
     select: publicSubjectSelect,
   });
-  
 }
 
 export async function updateSubject(subjectId, data) {
@@ -76,10 +75,12 @@ export async function updateSubject(subjectId, data) {
     });
 
     if (!professor) {
-      throw new NotFoundError(`Professor com ID ${data.professorId} não encontrado`);
+      throw new NotFoundError(
+        `Professor com ID ${data.professorId} não encontrado`,
+      );
     }
   }
-  
+
   return await prisma.subject.update({
     where: { id: subjectId },
     data,

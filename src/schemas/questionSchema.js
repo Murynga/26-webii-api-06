@@ -27,7 +27,7 @@ export const createQuestionSchema = z
       .optional(),
     authorId: positiveIdSchema,
     subjectId: positiveIdSchema,
-    ativa: z.boolean().default(true)
+    ativa: z.boolean().default(true),
   })
   .strict();
 
@@ -40,8 +40,7 @@ export const updateQuestionSchema = z
       .min(3, "Enunciado deve ter pelo menos 3 caracteres")
       .max(500, "Enunciado deve ter no máximo 500 caracteres")
       .optional(),
-    dificuldade: difficultySchema
-      .optional(),
+    dificuldade: difficultySchema.optional(),
     respostaCorreta: z
       .string()
       .trim()
@@ -51,20 +50,19 @@ export const updateQuestionSchema = z
       .optional(),
     authorId: positiveIdSchema.optional(),
     subjectId: positiveIdSchema.optional(),
-    ativa: z.boolean().optional()
+    ativa: z.boolean().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: "Envie pelo menos um campo para atualização",
   });
 
-
 /** Schema para parâmetros :id numéricos adequados. */
 export const numericParamSchema = z.object({
-  id: numericInputSchema
+  id: numericInputSchema,
 });
 
 /** Schema para parâmetros :id positivos. */
 export const idParamSchema = z.object({
-  id: positiveIdSchema
+  id: positiveIdSchema,
 });

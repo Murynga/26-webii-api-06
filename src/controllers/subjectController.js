@@ -7,7 +7,7 @@ export async function create(req, res, next) {
       success: true,
       message: "Matéria criada com sucesso",
       data,
-    }); 
+    });
   } catch (error) {
     next(error);
   }

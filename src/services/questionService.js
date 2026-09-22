@@ -104,7 +104,7 @@ export async function updateQuestion(questionId, data) {
     subjectId: data.subjectId,
     authorId: data.authorId,
   });
-  
+
   return await prisma.question.update({
     where: { id: questionId },
     data,
@@ -128,7 +128,6 @@ export async function deleteQuestion(questionId) {
       select: publicQuestionSelect,
     });
   } catch (error) {
-
     if (error?.code === "P2025") {
       throw new NotFoundError(`Matéria com ID ${questionId} não encontrada`);
     }

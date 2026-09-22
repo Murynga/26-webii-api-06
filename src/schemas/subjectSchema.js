@@ -31,7 +31,6 @@ export const updateSubjectSchema = z
     message: "Envie pelo menos um campo para atualização",
   });
 
-
 /** Schema para parâmetros :id numéricos adequados. */
 export const numericParamSchema = z.object({
   id: numericInputSchema,
