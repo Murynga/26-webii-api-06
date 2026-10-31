@@ -9,6 +9,13 @@ import {
   updateUserV2Schema,
 } from "../schemas/userSchema.js";
 
+const validateUpdateSchema = validate(updateUserV2Schema);
+
+function validateUpdateBody(req, res, next) {
+  if (req.file && Object.keys(req.body ?? {}).length === 0) return next();
+  return validateUpdateSchema(req, res, next);
+}
+
 const router = express.Router();
 
 router.post(
@@ -22,7 +29,8 @@ router.get("/:id", validate(idParamSchema, "params"), userController.getById);
 router.patch(
   "/:id",
   validate(idParamSchema, "params"),
-  validate(updateUserV2Schema),
+  uploadPhoto,
+  validateUpdateBody,
   userController.update,
 );
 router.delete("/:id", validate(idParamSchema, "params"), userController.remove);
